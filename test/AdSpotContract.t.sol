@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
@@ -52,7 +52,7 @@ contract AdSpotContractTest is Test {
         acceptedToken.transfer(address(adSpotContract), 1e18);
     }
 
-    function testInitialSetup() public {
+    function testInitialSetup() public view {
         assertEq(
             address(adSpotContract.getAcceptedToken()),
             address(acceptedToken),

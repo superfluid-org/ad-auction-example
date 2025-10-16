@@ -1,5 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0
-
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.8.2 <0.9.0;
 
 /**
@@ -216,7 +215,7 @@ contract AdSpotContract is CFASuperAppBase {
         ISuperToken,
         address sender,
         int96 previousflowRate,
-        uint256 lastUpdated,
+        uint256 /*lastUpdated*/,
         bytes calldata ctx
     ) internal override returns (bytes memory newCtx) {
         int96 senderFlowRate = acceptedToken.getFlowRate(sender, address(this));
@@ -255,7 +254,7 @@ contract AdSpotContract is CFASuperAppBase {
         ISuperToken /*superToken*/,
         address sender,
         address /*receiver*/,
-        int96 previousFlowRate,
+        int96 /*previousFlowRate*/,
         uint256 /*lastUpdated*/,
         bytes calldata ctx
     ) internal override returns (bytes memory newCtx) {
