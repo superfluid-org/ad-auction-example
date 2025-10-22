@@ -1,16 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import "forge-std/Test.sol";
-import {console} from "forge-std/console.sol";
+import {Test, console} from "forge-std/Test.sol";
 import {AdSpotContract} from "../src/AdSpotContract.sol";
 import {
     SuperfluidFrameworkDeployer
 } from "@superfluid-finance/ethereum-contracts/contracts/utils/SuperfluidFrameworkDeployer.t.sol";
 import {
     SuperTokenV1Library,
-    ISuperToken,
-    ISuperfluid
+    ISuperToken
 } from "@superfluid-finance/ethereum-contracts/contracts/apps/SuperTokenV1Library.sol";
 import {
     ERC1820RegistryCompiled

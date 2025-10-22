@@ -10,22 +10,17 @@ pragma solidity >=0.8.2 <0.9.0;
  * @custom:dev-run-script ./scripts/deploy_with_ethers.ts
  */
 
+import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+
 import {
     ISuperfluid,
     ISuperToken,
-    ISuperApp,
-    SuperAppDefinitions
-} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperfluid.sol";
-import {
-    ISuperfluidPool
-} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/agreements/gdav1/ISuperfluidPool.sol";
-import {SuperTokenV1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/SuperTokenV1Library.sol";
-import {CFASuperAppBase} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFASuperAppBase.sol";
-import {
-    IGeneralDistributionAgreementV1,
     ISuperfluidPool,
     PoolConfig
-} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/agreements/gdav1/IGeneralDistributionAgreementV1.sol";
+} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperfluid.sol";
+
+import {CFASuperAppBase} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFASuperAppBase.sol";
+import {SuperTokenV1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/SuperTokenV1Library.sol";
 
 contract AdSpotContract is CFASuperAppBase {
     using SuperTokenV1Library for ISuperToken;
@@ -196,7 +191,7 @@ contract AdSpotContract is CFASuperAppBase {
         newCtx = ctx;
         if (highestBidder != address(0)) {
             newCtx = acceptedToken.deleteFlowWithCtx(highestBidder, address(this), ctx);
-            uint128 halfShares = uint128(block.timestamp - lastUpdate) / 2;
+            uint128 halfShares = SafeCast.toUint128(block.timestamp - lastUpdate) / 2;
             if (pool.getUnits(owner) == 1) {
                 pool.updateMemberUnits(owner, halfShares + pool.getUnits(owner) - 1);
             } else {
@@ -236,7 +231,7 @@ contract AdSpotContract is CFASuperAppBase {
         );
         require(senderFlowRate > highestFlowRate, "You already have a flowrate that is higher than this one");
         newCtx = ctx;
-        uint128 halfShares = uint128(block.timestamp - lastUpdate) / 2;
+        uint128 halfShares = SafeCast.toUint128(block.timestamp - lastUpdate) / 2;
         ISuperfluidPool(poolAddress).updateMemberUnits(owner, halfShares + pool.getUnits(owner));
         ISuperfluidPool(poolAddress).updateMemberUnits(highestBidder, halfShares + pool.getUnits(highestBidder));
         newCtx = acceptedToken.distributeFlowWithCtx(address(this), pool, senderFlowRate, newCtx);
@@ -273,7 +268,7 @@ contract AdSpotContract is CFASuperAppBase {
     {
         require(sender == highestBidder, "You don't have an active stream");
 
-        uint128 halfShares = uint128(block.timestamp - lastUpdate) / 2;
+        uint128 halfShares = SafeCast.toUint128(block.timestamp - lastUpdate) / 2;
         pool.updateMemberUnits(owner, halfShares + pool.getUnits(owner));
         pool.updateMemberUnits(highestBidder, halfShares + pool.getUnits(highestBidder));
 
