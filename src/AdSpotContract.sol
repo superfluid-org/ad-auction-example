@@ -258,8 +258,6 @@ contract AdSpotContract is CFASuperAppBase {
         ISuperToken,
         /*superToken*/
         address sender,
-        address,
-        /*receiver*/
         int96,
         /*previousFlowRate*/
         uint256,
