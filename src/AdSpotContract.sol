@@ -10,7 +10,7 @@ pragma solidity >=0.8.2 <0.9.0;
  * @custom:dev-run-script ./scripts/deploy_with_ethers.ts
  */
 
-import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 import {
     ISuperfluid,
@@ -223,7 +223,11 @@ contract AdSpotContract is CFASuperAppBase {
         uint256,
         /*lastUpdated*/
         bytes calldata ctx
-    ) internal override returns (bytes memory newCtx) {
+    )
+        internal
+        override
+        returns (bytes memory newCtx)
+    {
         int96 senderFlowRate = acceptedToken.getFlowRate(sender, address(this));
         require(
             senderFlowRate > previousflowRate,
