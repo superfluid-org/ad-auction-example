@@ -1,4 +1,4 @@
-name: CI
+name: test
 
 on:
   push:
@@ -23,7 +23,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: nightly
+          version: v1.4.1
 
       - name: Show Forge version
         run: |
@@ -35,8 +35,9 @@ jobs:
         id: fmt
 
       - name: Run Forge build
+        # do not enforce EIP-170 (max code size) for test contracts
         run: |
-          forge build --sizes
+          forge build --sizes --skip test
         id: build
 
       - name: Run Forge tests

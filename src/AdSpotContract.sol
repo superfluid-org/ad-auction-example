@@ -1,5 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0
-
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.8.2 <0.9.0;
 
 /**
@@ -11,11 +10,17 @@ pragma solidity >=0.8.2 <0.9.0;
  * @custom:dev-run-script ./scripts/deploy_with_ethers.ts
  */
 
-import {ISuperfluid, ISuperToken, ISuperApp, SuperAppDefinitions} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperfluid.sol";
-import {ISuperfluidPool} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/agreements/gdav1/ISuperfluidPool.sol";
-import {SuperTokenV1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/SuperTokenV1Library.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+
+import {
+    ISuperfluid,
+    ISuperToken,
+    ISuperfluidPool,
+    PoolConfig
+} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperfluid.sol";
+
 import {CFASuperAppBase} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFASuperAppBase.sol";
-import {IGeneralDistributionAgreementV1, ISuperfluidPool, PoolConfig} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/agreements/gdav1/IGeneralDistributionAgreementV1.sol";
+import {SuperTokenV1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/SuperTokenV1Library.sol";
 
 contract AdSpotContract is CFASuperAppBase {
     using SuperTokenV1Library for ISuperToken;
@@ -27,7 +32,7 @@ contract AdSpotContract is CFASuperAppBase {
     address private owner;
     address public highestBidder;
     int96 private highestFlowRate;
-    uint private lastUpdate;
+    uint256 private lastUpdate;
     PoolConfig private poolConfig;
     address public nftAddress;
     uint256 public nftTokenId;
@@ -40,13 +45,7 @@ contract AdSpotContract is CFASuperAppBase {
      * @param _acceptedToken The SuperToken accepted for streaming payments.
      */
 
-    constructor(
-        ISuperToken _acceptedToken
-    )
-        CFASuperAppBase(
-            ISuperfluid(ISuperToken(_acceptedToken).getHost())
-        )
-    {
+    constructor(ISuperToken _acceptedToken) CFASuperAppBase(ISuperfluid(ISuperToken(_acceptedToken).getHost())) {
         acceptedToken = _acceptedToken;
         owner = msg.sender;
         poolConfig.transferabilityForUnitsOwner = true;
@@ -119,7 +118,7 @@ contract AdSpotContract is CFASuperAppBase {
     /**
      * @dev Returns the last update timestamp.
      */
-    function getLastUpdate() public view returns (uint) {
+    function getLastUpdate() public view returns (uint256) {
         return lastUpdate;
     }
 
@@ -178,16 +177,21 @@ contract AdSpotContract is CFASuperAppBase {
      * @return bytes Returns the new transaction context.
      */
     function onFlowCreated(
-        ISuperToken /*superToken*/,
+        ISuperToken,
+        /*superToken*/
         address sender,
         bytes calldata ctx
-    ) internal override returns (bytes memory newCtx) {
+    )
+        internal
+        override
+        returns (bytes memory newCtx)
+    {
         int96 senderFlowRate = acceptedToken.getFlowRate(sender, address(this));
         require(senderFlowRate > highestFlowRate, "Sender flowrate lower than current flowRate");
         newCtx = ctx;
         if (highestBidder != address(0)) {
             newCtx = acceptedToken.deleteFlowWithCtx(highestBidder, address(this), ctx);
-            uint128 halfShares = uint128(block.timestamp - lastUpdate) / 2;
+            uint128 halfShares = SafeCast.toUint128(block.timestamp - lastUpdate) / 2;
             if (pool.getUnits(owner) == 1) {
                 pool.updateMemberUnits(owner, halfShares + pool.getUnits(owner) - 1);
             } else {
@@ -216,25 +220,24 @@ contract AdSpotContract is CFASuperAppBase {
         ISuperToken,
         address sender,
         int96 previousflowRate,
-        uint256 lastUpdated,
+        uint256,
+        /*lastUpdated*/
         bytes calldata ctx
-    ) internal override returns (bytes memory newCtx) {
+    )
+        internal
+        override
+        returns (bytes memory newCtx)
+    {
         int96 senderFlowRate = acceptedToken.getFlowRate(sender, address(this));
         require(
             senderFlowRate > previousflowRate,
             "Sender flowRate is lower than the previous one, delete flowrate and start a new one lower"
         );
-        require(
-            senderFlowRate > highestFlowRate,
-            "You already have a flowrate that is higher than this one"
-        );
+        require(senderFlowRate > highestFlowRate, "You already have a flowrate that is higher than this one");
         newCtx = ctx;
-        uint128 halfShares = uint128(block.timestamp - lastUpdate) / 2;
+        uint128 halfShares = SafeCast.toUint128(block.timestamp - lastUpdate) / 2;
         ISuperfluidPool(poolAddress).updateMemberUnits(owner, halfShares + pool.getUnits(owner));
-        ISuperfluidPool(poolAddress).updateMemberUnits(
-            highestBidder,
-            halfShares + pool.getUnits(highestBidder)
-        );
+        ISuperfluidPool(poolAddress).updateMemberUnits(highestBidder, halfShares + pool.getUnits(highestBidder));
         newCtx = acceptedToken.distributeFlowWithCtx(address(this), pool, senderFlowRate, newCtx);
         highestBidder = sender;
         highestFlowRate = senderFlowRate;
@@ -252,16 +255,24 @@ contract AdSpotContract is CFASuperAppBase {
      */
 
     function onFlowDeleted(
-        ISuperToken /*superToken*/,
+        ISuperToken,
+        /*superToken*/
         address sender,
-        address /*receiver*/,
-        int96 previousFlowRate,
-        uint256 /*lastUpdated*/,
+        address,
+        /*receiver*/
+        int96,
+        /*previousFlowRate*/
+        uint256,
+        /*lastUpdated*/
         bytes calldata ctx
-    ) internal override returns (bytes memory newCtx) {
+    )
+        internal
+        override
+        returns (bytes memory newCtx)
+    {
         require(sender == highestBidder, "You don't have an active stream");
 
-        uint128 halfShares = uint128(block.timestamp - lastUpdate) / 2;
+        uint128 halfShares = SafeCast.toUint128(block.timestamp - lastUpdate) / 2;
         pool.updateMemberUnits(owner, halfShares + pool.getUnits(owner));
         pool.updateMemberUnits(highestBidder, halfShares + pool.getUnits(highestBidder));
 

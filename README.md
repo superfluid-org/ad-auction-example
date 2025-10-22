@@ -45,6 +45,21 @@ forge test -vv  # Shows logs
 forge test -vvv # Shows stack traces
 ```
 
+## Deployment
+
+Deploy the contract with a supported Super Token.
+Example using ETHx on Base Sepolia:
+```bash
+$ forge create src/AdSpotContract.sol:AdSpotContract --rpc-url https://sepolia.base.org --private-key $PRIVKEY --broadcast --constructor-args 0x143ea239159155B408e71CDbE836e8CFD6766732
+[⠊] Compiling...
+No files changed, compilation skipped
+Deployer: 0x4ee5D45eB79aEa04C02961a2e543bbAf5cec81B3
+Deployed to: 0xb9F22cd234A20cfB497b6732d6b43Dd9E7eE84D2
+Transaction hash: 0x9aeaa4ace018002aea374f5d19b40179c778f44a2380d5ee384408f8c8e6ad2c
+```
+
+(you should run the command with `--verify` in order to also verify the contract upon deployment)
+
 ## Contract Architecture
 
 The AdSpot Contract consists of three main components:
@@ -60,17 +75,9 @@ The AdSpot Contract consists of three main components:
 3. Highest bidder can set their NFT to showcase
 4. Previous bidders automatically receive their share of new streams
 
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
 ## License
 
-GPL-3.0
+MIT
 
 ## Acknowledgments
 
