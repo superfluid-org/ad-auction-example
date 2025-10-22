@@ -35,6 +35,7 @@ jobs:
         id: fmt
 
       - name: Run Forge build
+        # do not enforce EIP-170 (max code size) for test contracts
         run: |
           forge build --sizes --skip test
         id: build
