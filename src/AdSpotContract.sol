@@ -180,14 +180,14 @@ contract AdSpotContract is CFASuperAppBase {
         ISuperToken,
         /*superToken*/
         address sender,
+        int96 flowRate,
         bytes calldata ctx
     )
         internal
         override
         returns (bytes memory newCtx)
     {
-        int96 senderFlowRate = acceptedToken.getFlowRate(sender, address(this));
-        require(senderFlowRate > highestFlowRate, "Sender flowrate lower than current flowRate");
+        require(flowRate > highestFlowRate, "Sender flowrate lower than current flowRate");
         newCtx = ctx;
         if (highestBidder != address(0)) {
             newCtx = acceptedToken.deleteFlowWithCtx(highestBidder, address(this), ctx);
@@ -200,10 +200,10 @@ contract AdSpotContract is CFASuperAppBase {
             pool.updateMemberUnits(highestBidder, halfShares + pool.getUnits(highestBidder));
         }
         highestBidder = sender;
-        highestFlowRate = senderFlowRate;
+        highestFlowRate = flowRate;
         lastUpdate = block.timestamp;
         emit newHighestBidder(highestBidder, highestFlowRate);
-        newCtx = acceptedToken.distributeFlowWithCtx(address(this), pool, senderFlowRate, newCtx);
+        newCtx = acceptedToken.distributeFlowWithCtx(address(this), pool, flowRate, newCtx);
         return newCtx;
     }
 
@@ -219,28 +219,20 @@ contract AdSpotContract is CFASuperAppBase {
     function onFlowUpdated(
         ISuperToken,
         address sender,
-        int96 previousflowRate,
-        uint256,
-        /*lastUpdated*/
+        int96 flowRate,
+        int96 previousFlowRate,
+        uint256 lastUpdated,
         bytes calldata ctx
-    )
-        internal
-        override
-        returns (bytes memory newCtx)
-    {
-        int96 senderFlowRate = acceptedToken.getFlowRate(sender, address(this));
-        require(
-            senderFlowRate > previousflowRate,
-            "Sender flowRate is lower than the previous one, delete flowrate and start a new one lower"
-        );
-        require(senderFlowRate > highestFlowRate, "You already have a flowrate that is higher than this one");
+    ) internal override returns (bytes memory newCtx) {
+        require(flowRate > previousFlowRate, "Sender flowRate is lower than the previous one, delete flowrate and start a new one lower");
+        require(flowRate > highestFlowRate, "You already have a flowrate that is higher than this one");
         newCtx = ctx;
         uint128 halfShares = SafeCast.toUint128(block.timestamp - lastUpdate) / 2;
         ISuperfluidPool(poolAddress).updateMemberUnits(owner, halfShares + pool.getUnits(owner));
         ISuperfluidPool(poolAddress).updateMemberUnits(highestBidder, halfShares + pool.getUnits(highestBidder));
-        newCtx = acceptedToken.distributeFlowWithCtx(address(this), pool, senderFlowRate, newCtx);
+        newCtx = acceptedToken.distributeFlowWithCtx(address(this), pool, flowRate, newCtx);
         highestBidder = sender;
-        highestFlowRate = senderFlowRate;
+        highestFlowRate = flowRate;
         lastUpdate = block.timestamp;
         emit newHighestBidder(highestBidder, highestFlowRate);
         return newCtx;
@@ -254,7 +246,7 @@ contract AdSpotContract is CFASuperAppBase {
      * @return bytes Returns the new transaction context.
      */
 
-    function onFlowDeleted(
+    function onInFlowDeleted(
         ISuperToken,
         /*superToken*/
         address sender,
